@@ -78,7 +78,7 @@ const getSingleCartByUserService = async (userId: string) => {
     .exec();
 
   if (!result) {
-    throw new Error("Wishlist not found for this user");
+    throw new Error("Cart not found for this user");
   }
 
   return result;

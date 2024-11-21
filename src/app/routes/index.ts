@@ -18,6 +18,7 @@ import { newsletterRoutes } from "../modules/newsletter/newsletter.route";
 import { orderRoutes } from "../modules/order/order.route";
 import { sliderRoutes } from "../modules/slider/slider.route";
 import { dashboardRoutes } from "../modules/dashboard/dashboard.route";
+import { compareRoutes } from "../modules/compare/compare.route";
 
 const router = Router();
 
@@ -38,6 +39,7 @@ const routes = [
   newsletterRoutes,
   orderRoutes,
   sliderRoutes,
+  compareRoutes,
   dashboardRoutes,
   globalSettingRoutes,
 ];
