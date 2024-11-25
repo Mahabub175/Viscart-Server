@@ -91,10 +91,18 @@ const initiateOrderService = async (
     } catch (error: any) {
       throw new Error(`Payment initiation error: ${error.message}`);
     }
-  } else if (orderData.paymentType === "manual") {
+  } else if (
+    orderData.paymentType === "manual" ||
+    orderData.paymentType === "cod"
+  ) {
     await orderModel.create({
       ...orderCommonData,
-      paymentMethod: "Manual",
+    });
+    const productIds = orderData.products.map((item) => item.product);
+
+    await cartModel.deleteMany({
+      user: orderData.user,
+      product: { $in: productIds },
     });
 
     return {};

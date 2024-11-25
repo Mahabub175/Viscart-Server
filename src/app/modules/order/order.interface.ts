@@ -11,6 +11,8 @@ export interface IOrder {
   code: string;
   discount: string | number;
   subTotal: string | number;
+  trackingCode: string;
+  invoice: string;
   shippingFee: string | number;
   grandTotal: string | number;
   deliverOption: string;
