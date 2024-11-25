@@ -13,6 +13,8 @@ export interface IGlobalSetting {
   businessYoutube: string;
   businessWhatsapp: string;
   businessWorkHours: string;
+  deliveryChargeInsideDhaka: string;
+  deliveryChargeOutsideDhaka: string;
   primaryColor: string;
   secondaryColor: string;
   logo: string;
