@@ -5,8 +5,8 @@ import { ICart } from "./cart.interface";
 
 //Create a cart into database
 const createCartService = async (cartData: ICart) => {
-  const { user, product } = cartData;
-  const existingCart = await cartModel.findOne({ user, product });
+  const { user, deviceId, product } = cartData;
+  const existingCart = await cartModel.findOne({ user, deviceId, product });
 
   if (existingCart) {
     throw new Error("This product is already in your cart.");
@@ -69,16 +69,26 @@ const getSingleCartService = async (cartId: number | string) => {
 };
 
 const getSingleCartByUserService = async (userId: string) => {
-  const queryUserId = new mongoose.Types.ObjectId(userId);
+  let query;
+
+  if (mongoose.Types.ObjectId.isValid(userId)) {
+    query = {
+      $or: [{ user: userId }, { deviceId: userId }],
+    };
+  } else {
+    query = {
+      $or: [{ deviceId: userId }],
+    };
+  }
 
   const result = await cartModel
-    .find({ user: queryUserId })
+    .find(query)
     .populate("product")
     .populate("user")
     .exec();
 
-  if (!result) {
-    throw new Error("Cart not found for this user");
+  if (!result || result.length === 0) {
+    throw new Error("Cart not found for this identifier");
   }
 
   return result;
