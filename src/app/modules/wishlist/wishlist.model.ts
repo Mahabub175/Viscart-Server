@@ -4,8 +4,9 @@ import { IWishlist } from "./wishlist.interface";
 
 const wishlistSchema = new Schema<IWishlist>(
   {
-    user: { type: Schema.Types.ObjectId, ref: "user", required: true },
+    user: { type: Schema.Types.ObjectId, ref: "user" },
     product: { type: Schema.Types.ObjectId, ref: "product", required: true },
+    deviceId: { type: String },
     status: {
       type: String,
       enum: Object.values(Status),

@@ -75,16 +75,26 @@ const getSingleWishlistService = async (wishlistId: number | string) => {
 };
 
 const getSingleWishlistByUserService = async (userId: string) => {
-  const queryUserId = new mongoose.Types.ObjectId(userId);
+  let query;
+
+  if (mongoose.Types.ObjectId.isValid(userId)) {
+    query = {
+      $or: [{ user: userId }, { deviceId: userId }],
+    };
+  } else {
+    query = {
+      $or: [{ deviceId: userId }],
+    };
+  }
 
   const result = await wishlistModel
-    .find({ user: queryUserId })
+    .find(query)
     .populate("product")
     .populate("user")
     .exec();
 
-  if (!result) {
-    throw new Error("Wishlist not found for this user");
+  if (!result || result.length === 0) {
+    throw new Error("Wishlist not found for this identifier");
   }
 
   return result;
