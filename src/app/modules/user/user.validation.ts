@@ -2,9 +2,6 @@ import { z } from "zod";
 import { userRole } from "./user.constants";
 
 const createUserValidationSchema = z.object({
-  email: z.string({
-    required_error: "Email is required",
-  }),
   number: z.string({
     required_error: "Number is required",
   }),

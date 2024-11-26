@@ -1,36 +1,20 @@
+import httpStatus from "http-status";
+import jwt, { JwtPayload } from "jsonwebtoken";
 import mongoose from "mongoose";
 import config from "../../config";
-import { userModel } from "./user.model";
-import jwt, { JwtPayload } from "jsonwebtoken";
-import {
-  checkCurrentPasswordToPreviousPassword,
-  compareHashPassword,
-  getPreviousPasswords,
-  hashPassword,
-} from "../../utils/passwordUtils";
-import { paginateAndSort } from "../../utils/paginateAndSort";
-import { TUser } from "./user.interface";
+import appError from "../../errors/appError";
 import { Status } from "../../interface/global/global.interface";
 import { formatResultImage } from "../../utils/formatResultImage";
+import { paginateAndSort } from "../../utils/paginateAndSort";
+import { compareHashPassword, hashPassword } from "../../utils/passwordUtils";
 import { sendEmail } from "../../utils/sendEmail";
-import appError from "../../errors/appError";
-import httpStatus from "http-status";
 import { createToken } from "./auth.utils";
+import { TUser } from "./user.interface";
+import { userModel } from "./user.model";
 
 const createUserService = async (userData: TUser) => {
   const result = await userModel.create(userData);
-
-  const { _id, number, role, createdAt, updatedAt } = result;
-
-  const userInfo = {
-    _id,
-    number,
-    role,
-    createdAt,
-    updatedAt,
-  };
-
-  return userInfo;
+  return result;
 };
 
 const loginUserService = async (userData: any) => {
@@ -54,7 +38,7 @@ const loginUserService = async (userData: any) => {
     throw new Error("Wrong password! Please try again with a valid password!");
   }
 
-  const expirationTime = Math.floor(Date.now() / 1000 + 2 * 24 * 60 * 60);
+  const expirationTime = Math.floor(Date.now() / 1000 + 7 * 24 * 60 * 60);
 
   const jwtPayload = {
     userId: user._id,
@@ -249,7 +233,7 @@ const resetPasswordService = async (
   );
 };
 
-// Get all tests with optional pagination
+// Get all users with optional pagination
 const getAllUserService = async (
   page?: number,
   limit?: number,
@@ -285,30 +269,36 @@ const getAllUserService = async (
   }
 };
 
-//Get single test
-const getSingleUserService = async (userId: number | string) => {
-  const queryId =
-    typeof userId === "string" ? new mongoose.Types.ObjectId(userId) : userId;
+//Get single user
+const getSingleUserService = async (userId: string) => {
+  let query;
 
-  const testExists = await userModel.isUserExists(queryId as number | string);
-  if (!testExists) {
-    throw new Error("Test not found");
+  if (mongoose.Types.ObjectId.isValid(userId)) {
+    query = {
+      $or: [{ _id: userId }, { number: userId }],
+    };
+  } else {
+    query = {
+      $or: [{ number: userId }],
+    };
   }
 
-  // Find the test by ID
-  const result = await userModel.findById(queryId).exec();
-  if (!result) {
-    throw new Error("Test not found");
+  const result = await userModel.find(query).exec();
+
+  if (!result || result.length === 0) {
+    throw new Error("User not found for this identifier");
   }
 
-  if (typeof result.profile_image === "string") {
-    const formattedAttachment = formatResultImage<TUser>(result.profile_image);
+  const user = result[0];
+
+  if (typeof user.profile_image === "string") {
+    const formattedAttachment = formatResultImage<TUser>(user.profile_image);
     if (typeof formattedAttachment === "string") {
-      result.profile_image = formattedAttachment;
+      user.profile_image = formattedAttachment;
     }
   }
 
-  return result;
+  return user;
 };
 
 const updateUserStatusService = async (
