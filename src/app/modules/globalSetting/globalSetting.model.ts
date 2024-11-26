@@ -60,6 +60,16 @@ const globalSettingSchema = new Schema<IGlobalSetting>(
       trim: true,
       default: "Viscart Instagram",
     },
+    deliveryApiKey: {
+      type: String,
+      trim: true,
+      default: "Viscart Api Key",
+    },
+    deliverySecretKey: {
+      type: String,
+      trim: true,
+      default: "Viscart Secret Key",
+    },
     businessTwitter: {
       type: String,
       trim: true,

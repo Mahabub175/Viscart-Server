@@ -4,7 +4,8 @@ import { Status } from "../../interface/global/global.interface";
 
 const compareSchema = new Schema<ICompare>(
   {
-    user: { type: Schema.Types.ObjectId, ref: "user", required: true },
+    user: { type: Schema.Types.ObjectId, ref: "user" },
+    deviceId: { type: String },
     product: [{ type: Schema.Types.ObjectId, ref: "product", required: true }],
     status: {
       type: String,

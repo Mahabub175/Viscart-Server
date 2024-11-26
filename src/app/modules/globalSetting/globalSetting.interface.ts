@@ -17,6 +17,8 @@ export interface IGlobalSetting {
   deliveryChargeOutsideDhaka: string;
   primaryColor: string;
   secondaryColor: string;
+  deliveryApiKey: string;
+  deliverySecretKey: string;
   logo: string;
   favicon: string;
   currency: string;

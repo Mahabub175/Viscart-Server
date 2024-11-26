@@ -5,9 +5,15 @@ import { ICompare } from "./compare.interface";
 
 //Create a Compare into database
 const createCompareService = async (compareData: ICompare) => {
-  const { user, product } = compareData;
+  const { user, deviceId, product } = compareData;
 
-  const existingCompare = await compareModel.findOne({ user });
+  if (!user && !deviceId) {
+    throw new Error("Either user or deviceId must be provided.");
+  }
+
+  const existingCompare = await compareModel.findOne({
+    $or: [{ user }, { deviceId }],
+  });
 
   if (existingCompare) {
     if (existingCompare.product.length >= 2) {
@@ -83,16 +89,26 @@ const getSingleCompareService = async (compareId: number | string) => {
 };
 
 const getSingleCompareByUserService = async (userId: string) => {
-  const queryUserId = new mongoose.Types.ObjectId(userId);
+  let query;
+
+  if (mongoose.Types.ObjectId.isValid(userId)) {
+    query = {
+      $or: [{ user: userId }, { deviceId: userId }],
+    };
+  } else {
+    query = {
+      $or: [{ deviceId: userId }],
+    };
+  }
 
   const result = await compareModel
-    .find({ user: queryUserId })
+    .find(query)
     .populate("product")
     .populate("user")
     .exec();
 
-  if (!result) {
-    throw new Error("Compare not found for this user");
+  if (!result || result.length === 0) {
+    throw new Error("Compare not found for this identifier");
   }
 
   return result;
