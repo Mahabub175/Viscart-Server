@@ -47,7 +47,7 @@ app.get("/api/v1", (req: Request, res: Response) => {
 app.get("/", (req: Request, res: Response) => {
   res.send({
     success: true,
-    status: `{${httpStatus.OK},"Connected"}`,
+    status: httpStatus.OK,
     message: "Welcome to Your Secured Server!",
   });
 });
