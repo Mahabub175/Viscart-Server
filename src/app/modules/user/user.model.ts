@@ -28,6 +28,7 @@ const userSchema = new Schema<TUser>(
       type: String,
       required: true,
       trim: true,
+      select: false,
     },
     name: {
       type: String,

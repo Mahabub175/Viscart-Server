@@ -22,11 +22,13 @@ const initiateOrderService = async (
     throw new Error("Invalid User ID format.");
   }
 
-  const tranIdExists = await orderModel.findOne({
-    tranId: orderData.tranId,
-  });
-  if (tranIdExists) {
-    throw new Error("Transaction ID already exists.");
+  if (orderData?.tranId) {
+    const tranIdExists = await orderModel.findOne({
+      tranId: orderData.tranId,
+    });
+    if (tranIdExists) {
+      throw new Error("Transaction ID already exists.");
+    }
   }
 
   const orderCommonData = {
@@ -98,11 +100,25 @@ const initiateOrderService = async (
     await orderModel.create({
       ...orderCommonData,
     });
-    const productIds = orderData.products.map((item) => item.product);
+
+    const cartItems = orderCommonData.products.map((product) => ({
+      user: orderCommonData.user,
+      deviceId: orderCommonData.deviceId,
+      product: product.product,
+      quantity: Number(product.quantity),
+      price: orderCommonData.subTotal,
+    }));
+
+    await cartModel.insertMany(cartItems);
 
     await cartModel.deleteMany({
-      user: orderData.user,
-      product: { $in: productIds },
+      user: orderCommonData.user,
+      product: { $in: cartItems.map((item) => item.product) },
+    });
+
+    await cartModel.deleteMany({
+      deviceId: orderCommonData.deviceId,
+      product: { $in: cartItems.map((item) => item.product) },
     });
 
     return {};

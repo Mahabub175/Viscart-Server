@@ -13,6 +13,7 @@ export interface IOrder {
   subTotal: string | number;
   trackingCode: string;
   invoice: string;
+  deviceId: string;
   shippingFee: string | number;
   grandTotal: string | number;
   deliverOption: string;
