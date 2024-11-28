@@ -24,6 +24,7 @@ const productSchema = new Schema<IProduct>(
     slug: { type: String, unique: true, trim: true },
     sku: { type: String, required: true, unique: true, trim: true },
     description: { type: String },
+    video: { type: String },
     brand: { type: Schema.Types.ObjectId, ref: "brand" },
     category: { type: Schema.Types.ObjectId, ref: "category", required: true },
     mainImage: { type: String, required: false },

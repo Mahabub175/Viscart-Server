@@ -20,7 +20,8 @@ export interface IProduct extends Document {
   name: string;
   slug: string;
   sku: string;
-  description?: string;
+  description: string;
+  video: string;
   brand?: Types.ObjectId;
   category: Types.ObjectId;
   mainImage: string;
@@ -42,6 +43,4 @@ export interface IProduct extends Document {
   isOffer: boolean;
   isAvailable: boolean;
   status: Status;
-  createdAt?: Date;
-  updatedAt?: Date;
 }
