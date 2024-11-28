@@ -11,9 +11,18 @@ const createProductService = async (
   filePath?: string
 ) => {
   const slug = productSlug(productData.name, productData.sku);
-  const dataToSave = { ...productData, slug, filePath };
-  const result = await productModel.create(dataToSave);
-  return result;
+
+  const totalStock =
+    productData.isVariant && Array.isArray(productData.variants)
+      ? productData.variants.reduce(
+          (sum, variant) => sum + (Number(variant.stock) || 0),
+          0
+        )
+      : productData.stock || 0;
+
+  const dataToSave = { ...productData, slug, filePath, stock: totalStock };
+
+  return await productModel.create(dataToSave);
 };
 
 // Get all products with optional pagination
