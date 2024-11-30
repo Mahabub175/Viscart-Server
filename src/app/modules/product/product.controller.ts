@@ -7,15 +7,33 @@ const createProductController = async (
   next: NextFunction
 ) => {
   try {
-    const data = req.body;
+    const files = req.files as Express.Multer.File[];
+    const mainImage = files.find(
+      (file) => file.fieldname === "mainImage"
+    )?.path;
 
-    const filePath = req.file ? req.file.path : undefined;
+    const variants = [];
+    if (req.body.variants) {
+      for (const [index] of Object.keys(req.body.variants).entries()) {
+        const variant = req.body.variants[index];
+        const variantImage = files.find(
+          (file) => file.fieldname === `variants[${index}][image]`
+        )?.path;
 
-    const formData = {
-      ...data,
-      mainImage: filePath,
+        variants.push({
+          ...variant,
+          image: variantImage,
+        });
+      }
+    }
+
+    const productData = {
+      ...req.body,
+      mainImage,
+      variants,
     };
-    const result = await productServices.createProductService(formData);
+
+    const result = await productServices.createProductService(productData);
 
     res.status(200).json({
       success: true,

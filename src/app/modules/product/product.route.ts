@@ -6,7 +6,7 @@ const router = express.Router();
 
 router.post(
   "/product/",
-  uploadService.single("mainImage"),
+  uploadService.any(),
   ProductControllers.createProductController
 );
 
