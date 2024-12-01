@@ -101,26 +101,6 @@ const initiateOrderService = async (
       ...orderCommonData,
     });
 
-    const cartItems = orderCommonData.products.map((product) => ({
-      user: orderCommonData.user,
-      deviceId: orderCommonData.deviceId,
-      product: product.product,
-      quantity: Number(product.quantity),
-      price: orderCommonData.subTotal,
-    }));
-
-    await cartModel.insertMany(cartItems);
-
-    await cartModel.deleteMany({
-      user: orderCommonData.user,
-      product: { $in: cartItems.map((item) => item.product) },
-    });
-
-    await cartModel.deleteMany({
-      deviceId: orderCommonData.deviceId,
-      product: { $in: cartItems.map((item) => item.product) },
-    });
-
     return {};
   } else {
     throw new Error("Unsupported payment type");
@@ -138,26 +118,45 @@ const handleSSLOrderSuccessService = async (
 
   await orderModel.findOneAndUpdate({ tranId }, { paymentStatus: "SUCCESS" });
 
-  const productIds = order.products.map((item) =>
-    typeof item === "object" && item.product ? item.product : item
-  );
-
   const productDetails = order.products.map((item) => ({
     productId: typeof item === "object" && item.product ? item.product : item,
     quantity: item.quantity,
+    sku: item.sku,
   }));
 
-  for (const { productId, quantity } of productDetails) {
-    await productModel.findOneAndUpdate(
-      { _id: productId },
-      { $inc: { stock: -quantity } }
-    );
-  }
+  for (const { productId, quantity, sku } of productDetails) {
+    const product = await productModel.findById(productId);
 
-  await cartModel.deleteMany({
-    user: order.user,
-    product: { $in: productIds },
-  });
+    if (!product) {
+      throw new Error("Product not found");
+    }
+
+    if (product.isVariant && product.variants) {
+      const variant = product.variants.find((v) => v.sku === sku);
+
+      if (variant) {
+        await productModel.findOneAndUpdate(
+          { _id: productId, "variants.sku": sku },
+          { $inc: { "variants.$.stock": -quantity } }
+        );
+
+        const totalVariantStock = product.variants.reduce(
+          (acc, v) => acc + v.stock,
+          0
+        );
+
+        await productModel.findByIdAndUpdate(productId, {
+          $set: { stock: totalVariantStock },
+        });
+      } else {
+        throw new Error(`Variant with SKU ${sku} not found`);
+      }
+    } else {
+      await productModel.findByIdAndUpdate(productId, {
+        $inc: { stock: -quantity },
+      });
+    }
+  }
 
   if (order?.code) {
     await couponModel.findOneAndUpdate(
@@ -277,23 +276,44 @@ const updateSingleOrderService = async (
     order.paymentStatus !== "SUCCESS" &&
     orderData.paymentStatus === "SUCCESS"
   ) {
-    const productIds = order.products.map((item) => item.product);
-
-    await cartModel.deleteMany({
-      user: order.user,
-      product: { $in: productIds },
-    });
-
     const productDetails = order.products.map((item) => ({
       productId: typeof item === "object" && item.product ? item.product : item,
       quantity: item.quantity,
+      sku: item.sku,
     }));
 
-    for (const { productId, quantity } of productDetails) {
-      await productModel.findOneAndUpdate(
-        { _id: productId },
-        { $inc: { stock: -quantity } }
-      );
+    for (const { productId, quantity, sku } of productDetails) {
+      const product = await productModel.findById(productId);
+
+      if (!product) {
+        throw new Error("Product not found");
+      }
+
+      if (product.isVariant && product.variants) {
+        const variant = product.variants.find((v) => v.sku === sku);
+
+        if (variant) {
+          await productModel.findOneAndUpdate(
+            { _id: productId, "variants.sku": sku },
+            { $inc: { "variants.$.stock": -quantity } }
+          );
+
+          const totalVariantStock = product.variants.reduce(
+            (acc, v) => acc + v.stock,
+            0
+          );
+
+          await productModel.findByIdAndUpdate(productId, {
+            $set: { stock: totalVariantStock },
+          });
+        } else {
+          throw new Error(`Variant with SKU ${sku} not found`);
+        }
+      } else {
+        await productModel.findByIdAndUpdate(productId, {
+          $inc: { stock: -quantity },
+        });
+      }
     }
 
     if (order.code) {

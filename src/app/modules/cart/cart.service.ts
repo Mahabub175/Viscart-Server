@@ -69,29 +69,67 @@ const getSingleCartService = async (cartId: number | string) => {
 };
 
 const getSingleCartByUserService = async (userId: string) => {
-  let query;
-
-  if (mongoose.Types.ObjectId.isValid(userId)) {
-    query = {
-      $or: [{ user: userId }, { deviceId: userId }],
-    };
-  } else {
-    query = {
-      $or: [{ deviceId: userId }],
-    };
-  }
+  const query = mongoose.Types.ObjectId.isValid(userId)
+    ? { $or: [{ user: userId }, { deviceId: userId }] }
+    : { deviceId: userId };
 
   const result = await cartModel
     .find(query)
-    .populate("product")
-    .populate("user")
+    .populate({
+      path: "product",
+      select: "name price sku variants mainImage slug",
+      populate: {
+        path: "variants.attributeCombination",
+        model: "attributeOption",
+        populate: {
+          path: "attribute",
+          model: "attribute",
+          populate: {
+            path: "options",
+            model: "attributeOption",
+          },
+        },
+      },
+    })
+    .populate({
+      path: "user",
+      select: "name email",
+    })
     .exec();
 
   if (!result || result.length === 0) {
     throw new Error("Cart not found for this identifier");
   }
 
-  return result;
+  const cartDetails = result.map((cartItem) => {
+    const product = cartItem.product as any;
+
+    let matchingVariant = null;
+    if (product.sku === cartItem.sku) {
+      if (product.variants?.length > 0) {
+        matchingVariant = product.variants[0];
+      }
+    } else {
+      matchingVariant = product.variants?.find(
+        (variant: any) => variant.sku === cartItem.sku
+      );
+    }
+
+    return {
+      _id: cartItem._id,
+      user: cartItem.user,
+      productId: product._id,
+      slug: product.slug,
+      productName: product.name,
+      sku: cartItem.sku,
+      price: cartItem.price,
+      image: matchingVariant?.image ?? product?.mainImage,
+      quantity: cartItem.quantity,
+      variant: matchingVariant || null,
+    };
+  });
+
+  return cartDetails;
 };
 
 //Update single cart
