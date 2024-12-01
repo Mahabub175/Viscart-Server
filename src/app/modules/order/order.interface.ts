@@ -2,7 +2,12 @@ import { Types } from "mongoose";
 
 export interface IOrder {
   user: Types.ObjectId;
-  products: { product: Types.ObjectId; quantity: number; sku: string }[];
+  products: {
+    product: Types.ObjectId;
+    quantity: number;
+    productName: string;
+    sku: string;
+  }[];
   amount: number;
   name: string;
   email: string;
