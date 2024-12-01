@@ -35,7 +35,6 @@ const productSchema = new Schema<IProduct>(
     isVariant: { type: Boolean, default: false },
     variants: {
       type: [variantSchema],
-      default: undefined,
     },
     tags: [String],
     ratings: {

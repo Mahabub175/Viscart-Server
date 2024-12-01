@@ -96,6 +96,24 @@ const getSingleProductController = async (
   }
 };
 
+const getSingleProductBySkuController = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { sku } = req.params;
+    const result = await productServices.getSingleProductBySkuService(sku);
+    res.status(200).json({
+      success: true,
+      message: "Product By SkU Fetched Successfully!",
+      data: result,
+    });
+  } catch (error: any) {
+    next(error);
+  }
+};
+
 //Get single Product data by slug
 const getSingleProductBySlugController = async (
   req: Request,
@@ -200,6 +218,7 @@ export const ProductControllers = {
   createProductController,
   getAllProductController,
   getSingleProductController,
+  getSingleProductBySkuController,
   getSingleProductBySlugController,
   updateSingleProductController,
   deleteSingleProductController,

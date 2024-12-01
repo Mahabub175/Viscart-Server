@@ -18,6 +18,11 @@ router.get(
 );
 
 router.get(
+  "/product/sku/:sku/",
+  ProductControllers.getSingleProductBySkuController
+);
+
+router.get(
   "/product/slug/:productSlug/",
   ProductControllers.getSingleProductBySlugController
 );

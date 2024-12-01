@@ -13,6 +13,7 @@ const orderSchema = new Schema<IOrder>(
           required: true,
         },
         quantity: { type: Number, required: true, min: 1 },
+        sku: { type: String, required: true, trim: true },
       },
     ],
     name: { type: String, required: true, trim: true },

@@ -74,8 +74,6 @@ const getAllProductService = async (
       .sort({ createdAt: -1 })
       .exec();
 
-    results = formatResultImage(results, "mainImage");
-
     return {
       results,
     };
@@ -120,6 +118,50 @@ const getSingleProductService = async (productId: number | string) => {
   }
 
   return result;
+};
+
+const getSingleProductBySkuService = async (sku: string | number) => {
+  const result = await productModel
+    .findOne({ $or: [{ sku }, { "variants.sku": sku }] })
+    .select("name _id variants sku")
+    .populate({
+      path: "variants.attributeCombination",
+      model: "attributeOption",
+      populate: {
+        path: "attribute",
+        model: "attribute",
+        populate: {
+          path: "options",
+          model: "attributeOption",
+        },
+      },
+    })
+    .exec();
+
+  if (!result) {
+    throw new Error("Product not found");
+  }
+
+  if (!result.variants) {
+    throw new Error("Variants not found for the product");
+  }
+
+  let matchingVariant = null;
+
+  if (result.sku === sku) {
+    if (result.variants.length > 0) {
+      matchingVariant = result.variants[0];
+    }
+  } else {
+    matchingVariant = result.variants.find((variant) => variant.sku === sku);
+  }
+
+  return {
+    productId: result._id,
+    productName: result.name,
+    sku: matchingVariant?.sku ?? result.sku,
+    variant: matchingVariant || null,
+  };
 };
 
 // Get single product by slug
@@ -216,6 +258,7 @@ export const productServices = {
   createProductService,
   getAllProductService,
   getSingleProductService,
+  getSingleProductBySkuService,
   getSingleProductBySlugService,
   updateSingleProductService,
   deleteSingleProductService,
