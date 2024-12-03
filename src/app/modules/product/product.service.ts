@@ -202,12 +202,12 @@ const updateSingleProductService = async (
       ? new mongoose.Types.ObjectId(productId)
       : productId;
 
-  // const slug = productSlug(productData.name, productData.sku);
+  const slug = productSlug(productData.name, productData.sku);
 
   const result = await productModel
     .findByIdAndUpdate(
       queryId,
-      { $set: { ...productData } },
+      { $set: { ...productData, slug } },
       { new: true, runValidators: true }
     )
     .exec();
