@@ -5,8 +5,14 @@ import { ICart } from "./cart.interface";
 
 //Create a cart into database
 const createCartService = async (cartData: ICart) => {
-  const { user, deviceId, product } = cartData;
-  const existingCart = await cartModel.findOne({ user, deviceId, product });
+  const { user, deviceId, sku } = cartData;
+
+  const existingCart = await cartModel.findOne({
+    $or: [
+      { user, sku },
+      { deviceId, sku },
+    ],
+  });
 
   if (existingCart) {
     throw new Error("This product is already in your cart.");
