@@ -11,25 +11,34 @@ const createCompareService = async (compareData: ICompare) => {
     throw new Error("Either user or deviceId must be provided.");
   }
 
-  const existingCompare = await compareModel.findOne({
-    $or: [{ user }, { deviceId }],
-  });
+  const query: any = {};
+  if (user) query.user = user;
+  if (deviceId) query.deviceId = deviceId;
+
+  const existingCompare = await compareModel.findOne(query);
 
   if (existingCompare) {
     if (existingCompare.product.length >= 2) {
       throw new Error("You can only compare up to two products.");
     }
 
-    if (existingCompare.product.includes(product[0])) {
+    const productId = new mongoose.Types.ObjectId(product[0]);
+
+    if (existingCompare.product.some((p) => p.equals(productId))) {
       throw new Error("This product is already in your compare list.");
     }
 
-    existingCompare.product.push(product[0]);
+    existingCompare.product.push(productId);
     await existingCompare.save();
     return existingCompare;
   }
 
-  const result = await compareModel.create(compareData);
+  const formattedData = {
+    ...compareData,
+    product: compareData.product.map((p) => new mongoose.Types.ObjectId(p)),
+  };
+
+  const result = await compareModel.create(formattedData);
   return result;
 };
 
