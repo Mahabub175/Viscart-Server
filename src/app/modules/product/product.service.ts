@@ -179,6 +179,10 @@ const getSingleProductBySlugService = async (productSlug: number | string) => {
     .populate({
       path: "variants.attributeCombination",
       model: "attributeOption",
+      populate: {
+        path: "attribute",
+        model: "attribute",
+      },
     })
     .exec();
 
