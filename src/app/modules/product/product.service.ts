@@ -73,10 +73,6 @@ const getAllProductService = async (
         populate: {
           path: "attribute",
           model: "attribute",
-          populate: {
-            path: "options",
-            model: "attributeOption",
-          },
         },
       })
       .sort({ createdAt: -1 })
