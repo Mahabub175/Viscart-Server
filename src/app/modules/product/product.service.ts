@@ -70,6 +70,14 @@ const getAllProductService = async (
       .populate({
         path: "variants.attributeCombination",
         model: "attributeOption",
+        populate: {
+          path: "attribute",
+          model: "attribute",
+          populate: {
+            path: "options",
+            model: "attributeOption",
+          },
+        },
       })
       .sort({ createdAt: -1 })
       .exec();
